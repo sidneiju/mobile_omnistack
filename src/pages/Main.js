@@ -18,6 +18,7 @@ import api from "../services/api";
 function Main({ navigation }) {
   const [devs, setDevs] = useState([]);
   const [currentRegion, setCurrentRegion] = useState(null);
+  const [techs, setTechs] = useState(''); 
 
   useEffect(() => {
     async function loadInitialPosition() {
@@ -48,11 +49,11 @@ function Main({ navigation }) {
       params: {
         latitude,
         longitude,
-        techs: "Angular"
+        techs
       }
     });
 
-    setDevs(response.data);
+    setDevs(response.data.devs);
   }
 
   function handleRegionChange(region) {
@@ -66,29 +67,39 @@ function Main({ navigation }) {
 
   return (
     <>
-      <MapView onRegionChangeComplete={handleRegionChange} initialRegion={currentRegion} style={styles.map}>
-        {devs.map(dev => {
-          
-        })}
-        <Marker coordinate={{ latitude: -23.0799376, longitude: -50.7509547 }}>
-          <Image
-            style={styles.avatar}
-            source={{
-              uri: "https://avatars3.githubusercontent.com/u/29779597?s=460&v=4"
-            }}
-          />
-          <Callout
-            onPress={() => {
-              navigation.navigate("Profile", { github_username: "sidneiju" });
+      <MapView
+        onRegionChangeComplete={handleRegionChange}
+        initialRegion={currentRegion}
+        style={styles.map}
+      >
+        {devs.map(dev => (
+          <Marker key={dev._id}
+            coordinate={{
+              latitude: dev.location.coordinates[1],
+              longitude: dev.location.coordinates[0]
             }}
           >
-            <View style={styles.callout}>
-              <Text style={styles.devName}>Sidnei Junior Anastácio</Text>
-              <Text style={styles.devBio}>Juninho inho bio</Text>
-              <Text style={styles.devTechs}>Angular, ReactJS, ReactNative</Text>
-            </View>
-          </Callout>
-        </Marker>
+            <Image
+              style={styles.avatar}
+              source={{
+                uri: dev.avatar_url
+              }}
+            />
+            <Callout
+              onPress={() => {
+                navigation.navigate("Profile", {
+                  github_username: dev.github_username
+                });
+              }}
+            >
+              <View style={styles.callout}>
+                <Text style={styles.devName}>{dev.name}</Text>
+                <Text style={styles.devBio}>{dev.bio}</Text>
+                <Text style={styles.devTechs}>{dev.techs.join(", ")}</Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
       </MapView>
 
       <View style={styles.searchForm}>
@@ -98,6 +109,8 @@ function Main({ navigation }) {
           placeholderTextColor="#999"
           autoCapitalize="words"
           autoCorrect={false}
+          value={techs}
+          onChangeText={setTechs}
         />
 
         <TouchableOpacity onPress={loadDevs} style={styles.loadButton}>
